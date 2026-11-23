@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gato Matemático</title>
+  <meta name="description" content="Wylosuj zwycięzcę: kotki ścigają się po ogrodzie.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+
+  <header class="topbar">
+    <img class="logo" src="logo.jpg" alt="Kot matematyk w okularach">
+    <h1>Gato Matemático</h1>
+    <div class="h2">Wykonano Przez Rostyslava Slobodiana i Konrada Orłowskiego 1TA dla Pani Kasi
+    </div>
+    <button id="lang-pl">PL</button>
+    <button id="lang-es">ES</button>
+    <button id="fullscreen" aria-label="Pełny ekran">⛶</button>
+  </header>
+
+  <main class="layout">
+
+
+    <section class="card">
+      <strong data-i18n="hint"></strong>
+      <textarea id="input" data-i18n-ph="placeholder"></textarea>
+      <div class="row">
+        <button id="add" data-i18n="add"></button>
+        <button id="clear" data-i18n="clear"></button>
+        <span><span data-i18n="entries"></span> <b id="count"></b></span>
+      </div>
+      <p class="error" id="error"></p>
+      <p class="warning" id="warning"></p>
+      <ul id="list"></ul>
+      <button class="primary" id="start" data-i18n="start"></button>
+    </section>
+
+    
+    <section>
+      <div class="stage" id="stage">
+        <div class="layer" data-scene="clouds" data-speed="0.1"></div>
+        <div class="layer" data-scene="hills" data-speed="0.2"></div>
+        <div class="layer" data-scene="trees" data-speed="0.4"></div>
+        <div class="layer" data-scene="fence" data-speed="0.75"></div>
+        <div class="layer" data-scene="lawn" data-speed="1"></div>
+        <div class="world" id="world">
+          <div class="startline" id="startline"></div>
+          <div class="finish" id="finish"><span>I do tablicy przyjdzie...</span><em></em></div>
+        </div>
+        <div class="layer" data-scene="front" data-speed="1.4"></div>
+      </div>
+      <div class="hud">
+        <div class="progress">
+          <div class="prowadzi_full">🏁 <span data-i18n="leader" id="prowadzi_text"></span>: <b id="leader">–</b></div>
+          <div class="bar"><i id="bar"></i></div>
+        </div>
+        <div class="results">
+          <h3 data-i18n="results"></h3>
+          <ol id="ranking"><li class="placeholder" data-i18n="resultsWait"></li></ol>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  
+  <div class="overlay" id="countdown-overlay"><div id="countdown"></div></div>
+  <div class="overlay" id="winner-overlay">
+    <div class="modal">
+      <div class="winner-cat" id="winner-cat"></div>
+      <div>👑 <span data-i18n="winner"></span></div>
+      <h2 id="winner-name"></h2>
+      <div class="row center">
+        <button class="primary" id="again" data-i18n="again"></button>
+        <button id="remove" data-i18n="removeWinner"></button>
+        <button id="close" data-i18n="close"></button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
