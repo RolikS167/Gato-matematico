@@ -21,7 +21,7 @@ const CAT_THEMES = [
 const TEXTS = {
   pl: {
     hint: "Dodaj od 2 do 100 kotków",
-    placeholder: "Wpisz imiona lub numery (każde w nowej linii)...",
+    placeholder: "",
     add: "Dodaj kotki",
     clear: "Wyczyść listę",
     confirmClear: "Wyczyścić całą listę?",
@@ -39,7 +39,7 @@ const TEXTS = {
   },
   es: {
     hint: "Añade de 2 a 100 gatitos",
-    placeholder: "¡Adelante, Sra. Kasia!",
+    placeholder: "",
     add: "Añadir gatitos",
     clear: "Borrar lista",
     confirmClear: "¿Borrar toda la lista?",
