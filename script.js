@@ -2,8 +2,8 @@
 
 
 const MAX_ENTRIES = 100;
-const RACE_TIME = 13000;     // czas wyścigu w ms (13 s)
-const TRACK_LENGTH = 4000;   // długość trasy w px (krótsza, bo wyścig jest szybszy)
+const RACE_TIME = 15500;     // czas wyścigu w ms (15 s)
+const TRACK_LENGTH = 5000;   // długość trasy w px (krótsza, bo wyścig jest szybszy)
 const START_X = 160;         // minimalna pozycja linii startu w świecie (przy dużej liczbie kotków przesuwa się w prawo)
 const COLORS = ["#e58a2e", "#8a8f98", "#2a2a2e", "#f5f1e8", "#6d737d", "#c26a1c", "#d9a05b", "#c8b8a0"];
 
