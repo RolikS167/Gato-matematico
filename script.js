@@ -22,7 +22,7 @@ const TEXTS = {
   pl: {
     hint: "Dodaj od 2 do 100 kotków",
     placeholder: "",
-    autoAddLabel: "Dodaj numery 1–N:",
+    autoAddLabel: "Dodaj numery 1–100:",
     autoAddBtn: "Dodaj",
     add: "Dodaj kotki",
     clear: "Wyczyść listę",
@@ -42,7 +42,7 @@ const TEXTS = {
   es: {
     hint: "Añade de 2 a 100 gatitos",
     placeholder: "",
-    autoAddLabel: "Añadir números 1–N:",
+    autoAddLabel: "Añadir números 1–100:",
     autoAddBtn: "Añadir",
     add: "Añadir gatitos",
     clear: "Borrar lista",
