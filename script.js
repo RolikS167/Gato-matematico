@@ -35,7 +35,9 @@ const TEXTS = {
     results: "Czołówka wyścigu",
     resultsWait: "Wyniki pojawią się podczas biegu",
     minError: "Dodaj co najmniej 2 kotki, aby rozpocząć!",
-    desc: "Wylosuj zwycięzcę: kotki ścigają się po ogrodzie."
+    desc: "Wylosuj zwycięzcę: kotki ścigają się po ogrodzie.",
+    autoAddLabel: "Dodaj numery 1–100:",
+    autoAddBtn: "Dodaj".
   },
   es: {
     hint: "Añade de 2 a 100 gatitos",
@@ -53,7 +55,9 @@ const TEXTS = {
     results: "Resultados",
     resultsWait: "Los resultados aparecerán durante la carrera",
     minError: "¡Añade al menos 2 gatitos!",
-    desc: "Sortea un ganador: los gatitos corren por el jardín."
+    desc: "Sortea un ganador: los gatitos corren por el jardín.",
+    autoAddLabel: "Añadir números 1–N:",
+    autoAddBtn: "Añadir".
   }
 };
 
@@ -355,6 +359,14 @@ function setLanguage(lang) {
   $("#lang-pl").classList.toggle("active", lang === "pl");
   $("#lang-es").classList.toggle("active", lang === "es");
   validate();
+
+
+  
+  const autoLabel = $("label[for='auto-count']");
+  if (autoLabel) autoLabel.textContent = text("autoAddLabel");
+
+  const autoBtn = $("#auto-add");
+  if (autoBtn) autoBtn.textContent = text("autoAddBtn");
 }
 
 const stage = $("#stage");
