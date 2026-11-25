@@ -1,7 +1,7 @@
 "use strict";
 
 const MAX_ENTRIES = 100;
-const RACE_TIME = 16000; // Nieco spokojniejsze, bardziej zrównoważone tempo wyścigu
+const RACE_TIME = 16000;
 const TRACK_LENGTH = 5000;
 const START_X = 160;
 
@@ -22,6 +22,8 @@ const TEXTS = {
   pl: {
     hint: "Dodaj od 2 do 100 kotków",
     placeholder: "",
+    autoAddLabel: "Dodaj numery 1–N:",
+    autoAddBtn: "Dodaj",
     add: "Dodaj kotki",
     clear: "Wyczyść listę",
     confirmClear: "Wyczyścić całą listę?",
@@ -35,13 +37,13 @@ const TEXTS = {
     results: "Czołówka wyścigu",
     resultsWait: "Wyniki pojawią się podczas biegu",
     minError: "Dodaj co najmniej 2 kotki, aby rozpocząć!",
-    desc: "Wylosuj zwycięzcę: kotki ścigają się po ogrodzie.",
-    autoAddLabel: "Dodaj numery 1–100:",
-    autoAddBtn: "Dodaj".
+    desc: "Wylosuj zwycięzcę: kotki ścigają się po ogrodzie."
   },
   es: {
     hint: "Añade de 2 a 100 gatitos",
     placeholder: "",
+    autoAddLabel: "Añadir números 1–N:",
+    autoAddBtn: "Añadir",
     add: "Añadir gatitos",
     clear: "Borrar lista",
     confirmClear: "¿Borrar toda la lista?",
@@ -55,9 +57,7 @@ const TEXTS = {
     results: "Resultados",
     resultsWait: "Los resultados aparecerán durante la carrera",
     minError: "¡Añade al menos 2 gatitos!",
-    desc: "Sortea un ganador: los gatitos corren por el jardín.",
-    autoAddLabel: "Añadir números 1–N:",
-    autoAddBtn: "Añadir".
+    desc: "Sortea un ganador: los gatitos corren por el jardín."
   }
 };
 
@@ -356,17 +356,16 @@ function setLanguage(lang) {
     e.placeholder = text(e.dataset.i18nPh);
   });
 
-  $("#lang-pl").classList.toggle("active", lang === "pl");
-  $("#lang-es").classList.toggle("active", lang === "es");
-  validate();
-
-
-  
+  // Tłumaczenie dynamicznych elementów pól numerycznych
   const autoLabel = $("label[for='auto-count']");
   if (autoLabel) autoLabel.textContent = text("autoAddLabel");
 
   const autoBtn = $("#auto-add");
   if (autoBtn) autoBtn.textContent = text("autoAddBtn");
+
+  $("#lang-pl").classList.toggle("active", lang === "pl");
+  $("#lang-es").classList.toggle("active", lang === "es");
+  validate();
 }
 
 const stage = $("#stage");
@@ -382,7 +381,6 @@ let leaderIndex = -1;
 let startX = START_X;
 let trackBounds = { minTop: 200, maxTop: 420 };
 
-// ===== PODGŁOŚNIONY SYNTEZATOR WESOŁEJ MUZYKI W TLE =====
 let audioCtx = null;
 let bgMusicInterval = null;
 
@@ -410,7 +408,6 @@ function startBackgroundMusic() {
       const freq = notes[Math.floor(Math.random() * notes.length)];
       osc.frequency.setValueAtTime(freq, now);
 
-      // Zwiększona głośność melodyjki w tle (wyraźnie słyszalna, ale przyjemna)
       gain.gain.setValueAtTime(0.045, now);
       gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
 
@@ -426,7 +423,6 @@ function startBackgroundMusic() {
         bassOsc.type = "sine";
         bassOsc.frequency.setValueAtTime(bassNotes[Math.floor(Math.random() * bassNotes.length)], now);
         
-        // Zwiększona głośność basu
         bassGain.gain.setValueAtTime(0.06, now);
         bassGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.45);
 
@@ -447,14 +443,10 @@ function stopBackgroundMusic() {
   }
 }
 
-/**
- * Zróżnicowany profil ruchu: każdy kot ma unikalną "kondycję" i styl biegu
- * (jedni ruszają energicznie, inni nadrabiają w środku lub na końcu).
- */
 function makeProfile(finalPosition, isWinner) {
   const steps = 28;
   const weights = [];
-  const style = Math.floor(Math.random() * 3); // Trzy różne style biegu kotków
+  const style = Math.floor(Math.random() * 3);
   let sum = 0;
 
   for (let j = 0; j < steps; j++) {
@@ -462,13 +454,10 @@ function makeProfile(finalPosition, isWinner) {
     let base = 1.0;
 
     if (style === 0) {
-      // Styl 0: Równomierny bieg zrywami
       base = random(0.6, 1.6);
     } else if (style === 1) {
-      // Styl 1: Spokojny początek, mocny środek
       base = t > 0.2 && t < 0.7 ? random(1.2, 2.1) : random(0.5, 1.0);
     } else {
-      // Styl 2: Długi finisz
       base = t > 0.5 ? random(1.4, 2.3) : random(0.6, 1.1);
     }
 
@@ -541,7 +530,6 @@ function buildCats() {
 
     element.innerHTML = catSVG(i, name);
 
-    // Zróżnicowane, płynne tempo machania łapkami dla każdego kotka osobno
     const gallopDuration = random(0.24, 0.38).toFixed(2);
     const animDelay = `-${random(0, 0.5).toFixed(2)}s`;
     const svgEl = element.querySelector("svg");
