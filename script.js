@@ -1,7 +1,7 @@
 "use strict";
 
 const MAX_ENTRIES = 100;
-const RACE_TIME = 18000;
+const RACE_TIME = 16000; // Nieco spokojniejsze, bardziej zrównoważone tempo wyścigu
 const TRACK_LENGTH = 5000;
 const START_X = 160;
 
@@ -21,25 +21,25 @@ const CAT_THEMES = [
 const TEXTS = {
   pl: {
     hint: "Dodaj od 2 do 100 kotków",
-    placeholder: "",
+    placeholder: "Wpisz imiona lub numery (każde w nowej linii)...",
     add: "Dodaj kotki",
     clear: "Wyczyść listę",
     confirmClear: "Wyczyścić całą listę?",
     start: "Start wyścigu!",
     again: "Jeszcze raz!",
-    removeWinner: "Usuń Tego Gościa",
+    removeWinner: "Usuń zwycięzcę z listy",
     close: "Zamknij",
     winner: "I do tablicy przyjdzie...",
     entries: "Uczestnicy",
     leader: "Prowadzi",
-    results: "",
+    results: "Czołówka wyścigu",
     resultsWait: "Wyniki pojawią się podczas biegu",
     minError: "Dodaj co najmniej 2 kotki, aby rozpocząć!",
     desc: "Wylosuj zwycięzcę: kotki ścigają się po ogrodzie."
   },
   es: {
     hint: "Añade de 2 a 100 gatitos",
-    placeholder: "",
+    placeholder: "¡Adelante, Sra. Kasia!",
     add: "Añadir gatitos",
     clear: "Borrar lista",
     confirmClear: "¿Borrar toda la lista?",
@@ -297,7 +297,6 @@ function renderList() {
 }
 
 const saveNames = () => {
-  // Nie zapisujemy już listy do localStorage, dzięki czemu przy odświeżeniu zawsze startuje pusta
   try { localStorage.removeItem("kotki-names"); } catch (e) {}
 };
 
@@ -371,10 +370,79 @@ let leaderIndex = -1;
 let startX = START_X;
 let trackBounds = { minTop: 200, maxTop: 420 };
 
+// ===== PODGŁOŚNIONY SYNTEZATOR WESOŁEJ MUZYKI W TLE =====
+let audioCtx = null;
+let bgMusicInterval = null;
+
+function startBackgroundMusic() {
+  try {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === "suspended") {
+      audioCtx.resume();
+    }
+
+    const notes = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25];
+    const bassNotes = [130.81, 146.83, 164.81, 196.00];
+
+    bgMusicInterval = setInterval(() => {
+      if (!state.racing) return;
+
+      const now = audioCtx.currentTime;
+      
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      
+      osc.type = "triangle";
+      const freq = notes[Math.floor(Math.random() * notes.length)];
+      osc.frequency.setValueAtTime(freq, now);
+
+      // Zwiększona głośność melodyjki w tle (wyraźnie słyszalna, ale przyjemna)
+      gain.gain.setValueAtTime(0.045, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.38);
+
+      if (Math.random() > 0.4) {
+        const bassOsc = audioCtx.createOscillator();
+        const bassGain = audioCtx.createGain();
+        bassOsc.type = "sine";
+        bassOsc.frequency.setValueAtTime(bassNotes[Math.floor(Math.random() * bassNotes.length)], now);
+        
+        // Zwiększona głośność basu
+        bassGain.gain.setValueAtTime(0.06, now);
+        bassGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.45);
+
+        bassOsc.connect(bassGain);
+        bassGain.connect(audioCtx.destination);
+
+        bassOsc.start(now);
+        bassOsc.stop(now + 0.48);
+      }
+    }, 280);
+  } catch (e) {}
+}
+
+function stopBackgroundMusic() {
+  if (bgMusicInterval) {
+    clearInterval(bgMusicInterval);
+    bgMusicInterval = null;
+  }
+}
+
+/**
+ * Zróżnicowany profil ruchu: każdy kot ma unikalną "kondycję" i styl biegu
+ * (jedni ruszają energicznie, inni nadrabiają w środku lub na końcu).
+ */
 function makeProfile(finalPosition, isWinner) {
-  const steps = 24;
+  const steps = 28;
   const weights = [];
-  const style = Math.floor(Math.random() * 3);
+  const style = Math.floor(Math.random() * 3); // Trzy różne style biegu kotków
   let sum = 0;
 
   for (let j = 0; j < steps; j++) {
@@ -382,11 +450,14 @@ function makeProfile(finalPosition, isWinner) {
     let base = 1.0;
 
     if (style === 0) {
-      base = t < 0.35 ? random(1.2, 1.7) : t < 0.75 ? random(0.5, 0.95) : random(0.9, 1.4);
+      // Styl 0: Równomierny bieg zrywami
+      base = random(0.6, 1.6);
     } else if (style === 1) {
-      base = t < 0.45 ? random(0.5, 0.9) : t < 0.8 ? random(0.95, 1.4) : random(1.3, 1.8);
+      // Styl 1: Spokojny początek, mocny środek
+      base = t > 0.2 && t < 0.7 ? random(1.2, 2.1) : random(0.5, 1.0);
     } else {
-      base = random(0.4, 1.8);
+      // Styl 2: Długi finisz
+      base = t > 0.5 ? random(1.4, 2.3) : random(0.6, 1.1);
     }
 
     weights.push(base);
@@ -434,12 +505,6 @@ function buildCats() {
   startX = START_X + (cols - 1) * colGap;
   const finishLeft = startX + TRACK_LENGTH;
 
-  const rivals = state.names
-    .map((_, i) => i)
-    .filter((i) => i !== winnerIndex)
-    .sort(() => Math.random() - 0.5);
-  const closeOnes = new Set(rivals.slice(0, 4));
-
   world.classList.toggle("simple", n > 45);
   world.classList.remove("paused");
 
@@ -453,11 +518,7 @@ function buildCats() {
     const from = startX - col * colGap + random(-6, 6);
     const baseTop = laneTop + (rows > 1 ? (row / (rows - 1)) * laneSpace : laneSpace / 2);
 
-    const gap = i === winnerIndex
-      ? 0
-      : closeOnes.has(i)
-        ? random(0.004, 0.02)
-        : random(0.025, 0.095);
+    const gap = i === winnerIndex ? 0 : random(0.015, 0.42);
 
     const element = document.createElement("div");
     element.className = "cat";
@@ -468,7 +529,8 @@ function buildCats() {
 
     element.innerHTML = catSVG(i, name);
 
-    const gallopDuration = random(0.26, 0.42).toFixed(2);
+    // Zróżnicowane, płynne tempo machania łapkami dla każdego kotka osobno
+    const gallopDuration = random(0.24, 0.38).toFixed(2);
     const animDelay = `-${random(0, 0.5).toFixed(2)}s`;
     const svgEl = element.querySelector("svg");
     svgEl.style.animationDuration = `${gallopDuration}s`;
@@ -481,7 +543,7 @@ function buildCats() {
 
     const tailEl = element.querySelector(".cat-tail");
     if (tailEl) {
-      tailEl.style.animationDuration = `${random(0.32, 0.62).toFixed(2)}s`;
+      tailEl.style.animationDuration = `${random(0.3, 0.55).toFixed(2)}s`;
       tailEl.style.animationDelay = animDelay;
     }
 
@@ -501,7 +563,10 @@ function buildCats() {
       span: finishLeft - from,
       swayAmp: random(4, 10),
       swayFreq: random(2.0, 4.0),
-      swayPhase: random(0, Math.PI * 2)
+      swayPhase: random(0, Math.PI * 2),
+      jumpOffset: 0,
+      jumpSpeed: random(6, 11),
+      jumpChance: random(0.008, 0.025)
     };
   });
 }
@@ -511,7 +576,7 @@ function updateCamera(leaderProgress, dt) {
   const worldWidth = startX + TRACK_LENGTH + 320;
 
   const target = clamp(
-    startX + leaderProgress * TRACK_LENGTH - view * 0.55,
+    startX + leaderProgress * TRACK_LENGTH - view * 0.45,
     0,
     worldWidth - view
   );
@@ -587,8 +652,17 @@ function frame(now, startTime) {
     c.x = c.from + c.progress * c.span;
 
     const wave = Math.sin(xRatio * Math.PI * c.swayFreq + c.swayPhase) * c.swayAmp * Math.sin(xRatio * Math.PI);
-    const desiredY = c.baseTop + wave;
-    c.y += (desiredY - c.y) * Math.min(1, dt * 6);
+    
+    if (Math.random() < c.jumpChance && c.jumpOffset === 0 && xRatio > 0.1 && xRatio < 0.9) {
+      c.jumpOffset = -22;
+    }
+    if (c.jumpOffset < 0) {
+      c.jumpOffset += c.jumpSpeed;
+      if (c.jumpOffset > 0) c.jumpOffset = 0;
+    }
+
+    const desiredY = c.baseTop + wave + c.jumpOffset;
+    c.y += (desiredY - c.y) * Math.min(1, dt * 8);
   });
 
   const minDistX = cats[0] ? cats[0].width * 0.75 : 80;
@@ -613,10 +687,10 @@ function frame(now, startTime) {
   }
 
   cats.forEach((c) => {
-    c.y = clamp(c.y, trackBounds.minTop, trackBounds.maxTop);
+    c.y = clamp(c.y, trackBounds.minTop - 25, trackBounds.maxTop);
 
     const instantSpeed = (c.progress - c.prevProgress) / dt;
-    const tilt = clamp((instantSpeed - 0.05) * 45, -3.5, 7.5);
+    const tilt = clamp((instantSpeed - 0.05) * 45, -4, 8);
 
     c.element.style.left = `${c.x.toFixed(1)}px`;
     c.element.style.top = `${c.y.toFixed(1)}px`;
@@ -638,6 +712,7 @@ function frame(now, startTime) {
 }
 
 function finishRace() {
+  stopBackgroundMusic();
   $("#leader").textContent = state.names[winnerIndex];
   renderRanking(true);
   world.classList.add("paused");
@@ -714,12 +789,15 @@ async function startRace() {
 
   overlay.classList.remove("show");
 
+  startBackgroundMusic();
+
   const startTime = performance.now();
   lastFrame = startTime;
   requestAnimationFrame((t) => frame(t, startTime));
 }
 
 function endRace() {
+  stopBackgroundMusic();
   state.racing = false;
   validate();
 }
@@ -774,7 +852,6 @@ $("#fullscreen").onclick = () => {
   } catch (e) {}
 };
 
-// Zamiast wczytywać zapisane imiona, lista zawsze startuje jako pusta przy wejściu/odświeżeniu
 state.names = [];
 
 layers = setupLayers();
